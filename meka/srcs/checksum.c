@@ -44,18 +44,40 @@ static void     mekacrc(t_meka_crc *dst, const u8 *data, int data_size)
 //-----------------------------------------------------------------------------
 // FIXME: should take a media in parameter?
 //-----------------------------------------------------------------------------
+
+#define SDSC_PROGRAM_RELEASE_NOTES_ADDR 0x7FEE
+#define FAKECRC_STRING "fakecrc"
+#define FAKECRC_STRING_LEN 7
+
+bool hasFakeCRC(const u8 *data,int data_size,u32* crc_crc32,t_meka_crc*  crc_mekacrc){
+  int addr=SDSC_PROGRAM_RELEASE_NOTES_ADDR%data_size;   
+  addr=data[addr]+(data[addr+1]<<8);
+  if (memcmp(data+addr,FAKECRC_STRING,FAKECRC_STRING_LEN)) return false;
+  if (sscanf ( (const char*)data+addr+FAKECRC_STRING_LEN , "%08x %08X%08X", crc_crc32, &crc_mekacrc->v[0], &crc_mekacrc->v[1]) != 3){
+    Msg(MSGT_DEBUG, "Error in reading fakecrc");
+    return false;
+  }
+  Msg(MSGT_DEBUG, "This ROM is using fakecrc");
+  return true;
+}
+
+
 void            Checksum_Perform(const u8 *data, int data_size)
 {
-    t_meka_crc  crc_mekacrc;
 
-    // Compute and store MekaCRC
-    mekacrc(&crc_mekacrc, data, data_size);
-    g_media_rom.mekacrc.v[0] = crc_mekacrc.v[0];
-    g_media_rom.mekacrc.v[1] = crc_mekacrc.v[1];
 
-    // Compute and store CRC32
-    g_media_rom.crc32 = crc32(0, data, data_size);
+  if (!    hasFakeCRC(data,data_size,&g_media_rom.crc32,&g_media_rom.mekacrc)){
+  t_meka_crc  crc_mekacrc;
 
+  
+  // Compute and store MekaCRC
+  mekacrc(&crc_mekacrc, data, data_size);
+  g_media_rom.mekacrc.v[0] = crc_mekacrc.v[0];
+  g_media_rom.mekacrc.v[1] = crc_mekacrc.v[1];
+  
+  // Compute and store CRC32
+  g_media_rom.crc32 = crc32(0, data, data_size);
+  }
     // Print out checksums (debugging)
     // Msg(MSGT_DEBUG, "MekaCRC -> %08X.%08X ; CRC -> %08x", g_media_rom.mekacrc.v[0], g_media_rom.mekacrc.v[1], g_media_rom.crc32);
 
