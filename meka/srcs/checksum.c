@@ -52,25 +52,27 @@ static void     mekacrc(t_meka_crc *dst, const u8 *data, int data_size)
 #define FAKECRC_STRING "fakecrc"
 #define FAKECRC_STRING_LEN 7
 
-bool hasFakeCRC(const u8 *data,int data_size,u32* crc_crc32,t_meka_crc*  crc_mekacrc){
+bool hasFakeCRC(const u8 *data,int data_size,u32* crc_crc32,t_meka_crc*  crc_mekacrc)
+{
   if (memcmp(data+(SDSC_TAG_ADDR%data_size),SDSC_TAG,SDSC_TAG_LENGTH)) return false;
   int addr=SDSC_PROGRAM_RELEASE_NOTES_ADDR%data_size;   
   addr=data[addr]+(data[addr+1]<<8);
   if (memcmp(data+addr,FAKECRC_STRING,FAKECRC_STRING_LEN)) return false;
-  if (sscanf ( (const char*)data+addr+FAKECRC_STRING_LEN , "%08x %08X%08X", crc_crc32, &crc_mekacrc->v[0], &crc_mekacrc->v[1]) != 3){
-    Msg(MSGT_DEBUG, "Error in reading fakecrc");
-    return false;
-  }
+  if (sscanf ( (const char*)data+addr+FAKECRC_STRING_LEN , "%08x %08X%08X", crc_crc32, &crc_mekacrc->v[0], &crc_mekacrc->v[1]) != 3)
+    {
+      Msg(MSGT_DEBUG, "Error in reading fakecrc");
+      return false;
+    }
   Msg(MSGT_DEBUG, "This ROM is using fakecrc");
   return true;
 }
 
 
-void            Checksum_Perform(const u8 *data, int data_size)
+void Checksum_Perform(const u8 *data, int data_size)
 {
 
 
-  if (!    hasFakeCRC(data,data_size,&g_media_rom.crc32,&g_media_rom.mekacrc)){
+  if (!hasFakeCRC(data,data_size,&g_media_rom.crc32,&g_media_rom.mekacrc)){
   t_meka_crc  crc_mekacrc;
 
   
