@@ -45,11 +45,15 @@ static void     mekacrc(t_meka_crc *dst, const u8 *data, int data_size)
 // FIXME: should take a media in parameter?
 //-----------------------------------------------------------------------------
 
+#define SDSC_TAG_ADDR 0x7FE0
+#define SDSC_TAG "SDSC"
+#define SDSC_TAG_LENGTH 4
 #define SDSC_PROGRAM_RELEASE_NOTES_ADDR 0x7FEE
 #define FAKECRC_STRING "fakecrc"
 #define FAKECRC_STRING_LEN 7
 
 bool hasFakeCRC(const u8 *data,int data_size,u32* crc_crc32,t_meka_crc*  crc_mekacrc){
+  if (memcmp(data+(SDSC_TAG_ADDR%data_size),SDSC_TAG,SDSC_TAG_LENGTH)) return false;
   int addr=SDSC_PROGRAM_RELEASE_NOTES_ADDR%data_size;   
   addr=data[addr]+(data[addr+1]<<8);
   if (memcmp(data+addr,FAKECRC_STRING,FAKECRC_STRING_LEN)) return false;
